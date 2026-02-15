@@ -46,7 +46,7 @@ const ProgressCircle: React.FC<Props> = ({ isUIVisible, timeLeft, startTime, dur
 
       {/* 修复：根据 UI 是否可见动态切换 cursor。当 showUI 为 false 时强制 cursor-none */}
       <div 
-        className={`relative flex items-center justify-center group transition-all duration-1000 ${showUI ? 'cursor-pointer' : 'cursor-none'}`} 
+        className={`relative flex items-center justify-center group ${showUI ? 'cursor-pointer' : 'cursor-none'}`} 
         onClick={onCancel}
       >
         <div className="relative">
