@@ -8,6 +8,7 @@ interface Props { isUIVisible: boolean; timeLeft: number; startTime: number | nu
 const ProgressCircle: React.FC<Props> = ({ isUIVisible, timeLeft, startTime, duration, status, lang, onCancel }) => {
   const [progress, setProgress] = useState(0);
   const t = translations[lang];
+  const blockedUntilRef = React.useRef<number>(0);
   
   const radius = window.innerWidth < 768 ? 130 : 170;
   const stroke = 4;
@@ -28,6 +29,8 @@ const ProgressCircle: React.FC<Props> = ({ isUIVisible, timeLeft, startTime, dur
         requestAnimationFrame(update);
       };
       const id = requestAnimationFrame(update);
+      // set a short ignore window to avoid mobile ghost click (delayed click after touchend)
+      blockedUntilRef.current = Date.now() + 350;
       return () => cancelAnimationFrame(id);
     }
     if (status === 'finishing') {
@@ -45,9 +48,16 @@ const ProgressCircle: React.FC<Props> = ({ isUIVisible, timeLeft, startTime, dur
       <div className="h-[10px]" />
 
       {/* 修复：根据 UI 是否可见动态切换 cursor。当 showUI 为 false 时强制 cursor-none */}
-      <div 
-        className={`relative flex items-center justify-center group ${showUI ? 'cursor-pointer' : 'cursor-none'}`} 
-        onClick={onCancel}
+      <div
+        className={`relative flex items-center justify-center group ${showUI ? 'cursor-pointer' : 'cursor-none'}`}
+        onClick={(e: React.MouseEvent<HTMLDivElement>) => {
+          // ignore clicks that happen immediately after mounting/start to prevent ghost clicks on mobile
+          if (Date.now() < blockedUntilRef.current) {
+            e.stopPropagation();
+            return;
+          }
+          onCancel();
+        }}
       >
         <div className="relative">
           <svg height={radius * 2} width={radius * 2} className="transform -rotate-90">
