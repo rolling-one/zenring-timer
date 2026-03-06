@@ -3,7 +3,9 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>ZenRing Timer</title>
     <link rel="icon" href="/favicon.svg?v=2" type="image/svg+xml" />
     
@@ -31,12 +33,18 @@
     
     <style>
         /* 全局样式定义 */
-        body {
-            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        html, body {
+            height: 100%;
+            width: 100%;
             margin: 0;
             padding: 0;
             overflow: hidden; /* 禁止页面滚动 */
-            background-color: #FFFFFF;
+            overscroll-behavior: none; /* 防止橡皮筋效果露出背景 */
+            background-color: #000000; /* 默认设为黑色，防止全屏切换时闪白边 */
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             opacity: 0; /* 初始透明，等待字体加载后显示 */
             transition: opacity 0.5s ease;
         }
