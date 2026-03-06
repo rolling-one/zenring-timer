@@ -37,7 +37,11 @@ export const useZenAudio = () => {
   useEffect(() => {
     // 兼容不同浏览器的 AudioContext
     const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-    const ctx = new AudioContextClass();
+    
+    // 针对移动端优化：使用 latencyHint 提示浏览器增加缓冲，减少卡顿
+    const ctx = new AudioContextClass({
+      latencyHint: 'playback'
+    });
     audioCtx.current = ctx;
 
     // 创建增益节点（音量控制器）并连接到扬声器
@@ -49,15 +53,27 @@ export const useZenAudio = () => {
     const ambient = new Audio();
     ambient.loop = true; // 环境音需要循环播放
     ambient.preload = 'auto';
+    // 如果未来音频放在 CDN 上，允许跨域以便接入 Web Audio
+    ambient.crossOrigin = 'anonymous';
     ambientRef.current = ambient;
 
     // 初始化颂钵音元素
     const bowl = new Audio(SOUND_SOURCES.bowl);
     bowl.preload = 'auto';
+    bowl.crossOrigin = 'anonymous';
     bowlRef.current = bowl;
+
+    // 监听音频上下文状态变化（便于调试挂起问题）
+    const handleStateChange = () => {
+      if (ctx.state === 'suspended') {
+        console.log('音频上下文被挂起，等待用户交互或尝试恢复...');
+      }
+    };
+    ctx.addEventListener('statechange', handleStateChange);
     
     // 组件卸载时清理资源
     return () => {
+      ctx.removeEventListener('statechange', handleStateChange);
       ctx.close();
       if (fadeTimeoutRef.current) window.clearTimeout(fadeTimeoutRef.current);
       if (ambientRef.current) {
@@ -175,7 +191,7 @@ export const useZenAudio = () => {
 
     // 如果选择“无音效”，则执行淡出并停止
     if (type === 'none') {
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+      gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.5);
       fadeTimeoutRef.current = window.setTimeout(() => {
         safePause(audio, ambientPlayPromise);
         fadeTimeoutRef.current = null;
@@ -192,12 +208,12 @@ export const useZenAudio = () => {
       }
 
       audio.currentTime = 0;
-      // 设置初始音量为几乎静音，准备淡入
-      gain.gain.setValueAtTime(0.001, ctx.currentTime);
+      // 设置初始音量为静音，准备淡入
+      gain.gain.setValueAtTime(0, ctx.currentTime);
       
       await safePlay(audio, ambientPlayPromise);
-      // 在 2 秒内平滑淡入到正常音量
-      gain.gain.exponentialRampToValueAtTime(1.0, ctx.currentTime + 2.0);
+      // 在 2 秒内线性淡入到正常音量
+      gain.gain.linearRampToValueAtTime(1.0, ctx.currentTime + 2.0);
     }
   }, [ensureContext, clearFadeTimeout]);
 
@@ -239,9 +255,9 @@ export const useZenAudio = () => {
 
     const durationSec = durationMs / 1000;
     gain.gain.cancelScheduledValues(ctx.currentTime);
-    gain.gain.setValueAtTime(gain.gain.value || 0.001, ctx.currentTime);
-    // 指数级淡出到几乎静音
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + durationSec);
+    gain.gain.setValueAtTime(gain.gain.value, ctx.currentTime);
+    // 线性淡出到静音
+    gain.gain.linearRampToValueAtTime(0, ctx.currentTime + durationSec);
     
     // 淡出完成后彻底暂停音频元素
     fadeTimeoutRef.current = window.setTimeout(async () => {
