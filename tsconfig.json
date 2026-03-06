@@ -1,0 +1,50 @@
+{
+  "compilerOptions": {
+    /* 编译目标版本 */
+    "target": "ES2022",
+    /* 启用装饰器实验性支持 */
+    "experimentalDecorators": true,
+    /* 类字段定义方式 */
+    "useDefineForClassFields": false,
+    /* 生成的代码模块标准 */
+    "module": "ESNext",
+    /* 编译时需要引入的库文件 */
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    /* 跳过库文件的类型检查 */
+    "skipLibCheck": true,
+    /* 显式包含的类型定义 */
+    "types": [
+      "node"
+    ],
+    /* 模块解析策略（适用于 Vite 等构建工具） */
+    "moduleResolution": "bundler",
+    /* 确保每个文件都可以安全地进行转译 */
+    "isolatedModules": true,
+    /* 强制模块检测 */
+    "moduleDetection": "force",
+    /* 允许编译 JavaScript 文件 */
+    "allowJs": true,
+    /* JSX 代码生成方式 */
+    "jsx": "react-jsx",
+    /* 路径别名配置 */
+    "paths": {
+      "@/*": [
+        "./*"
+      ]
+    },
+    /* 允许导入 .ts 扩展名文件 */
+    "allowImportingTsExtensions": true,
+    /* 不生成输出文件（仅进行类型检查） */
+    "noEmit": true
+  },
+  /* 指定需要包含在编译范围内的文件 */
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.d.ts"
+  ]
+}
