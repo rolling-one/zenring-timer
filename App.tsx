@@ -192,6 +192,11 @@ const App: React.FC = () => {
   const isMeditating = status === 'meditating';
   const isPreparing = status === 'preparing';
   const isFinishing = status === 'finishing';
+  
+  // 同步 body 背景色，防止 iPad 全屏时露出白边
+  useEffect(() => {
+    document.body.style.backgroundColor = isMeditating ? '#000000' : '#FFFFFF';
+  }, [isMeditating]);
 
   // 根据不同阶段计算背景色过渡时长
   let transitionDur = '2s';
@@ -206,14 +211,19 @@ const App: React.FC = () => {
 
   return (
     <div 
-      className="fixed inset-0 flex flex-col items-center justify-center overflow-hidden select-none stable-color-transition" 
+      className="h-[100dvh] w-screen flex flex-col items-center justify-center overflow-hidden select-none stable-color-transition" 
       style={{
         // 冥想时背景为黑，文字为白；闲置时相反
         backgroundColor: isMeditating ? '#000000' : '#FFFFFF',
         color: isMeditating ? '#FFFFFF' : '#000000',
         transitionDuration: transitionDur,
         // 冥想且 UI 隐藏时隐藏鼠标指针
-        cursor: (isMeditating && !isUIVisible) ? 'none' : 'default'
+        cursor: (isMeditating && !isUIVisible) ? 'none' : 'default',
+        // 处理 iPad 安全区域
+        paddingTop: 'env(safe-area-inset-top)',
+        paddingBottom: 'env(safe-area-inset-bottom)',
+        paddingLeft: 'env(safe-area-inset-left)',
+        paddingRight: 'env(safe-area-inset-right)'
       }}
     >
       {/* 顶部导航栏 */}
