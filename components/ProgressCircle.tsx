@@ -19,8 +19,13 @@ interface Props {
 
 const ProgressCircle: React.FC<Props> = ({ isUIVisible, timeLeft, startTime, duration, status, lang, onCancel, wasDragging }) => {
   // --- 状态管理 ---
-  // 圆环半径，根据屏幕宽度动态调整
-  const [radius, setRadius] = useState(window.innerWidth < 700 ? 120 : 170);
+  // 圆环半径，根据屏幕短边动态调整，确保旋转屏幕时大小保持一致
+  const getStableRadius = () => {
+    const shortSide = Math.min(window.innerWidth, window.innerHeight);
+    return shortSide < 700 ? 120 : 170;
+  };
+
+  const [radius, setRadius] = useState(getStableRadius);
   // 进度百分比 (0 到 1)
   const [progress, setProgress] = useState(0);
   // 是否处于初始准备状态的缩放动画
@@ -38,7 +43,7 @@ const ProgressCircle: React.FC<Props> = ({ isUIVisible, timeLeft, startTime, dur
   // 响应式调整圆环大小
   useEffect(() => {
     const handleResize = () => {
-      setRadius(window.innerWidth < 700 ? 120 : 170);
+      setRadius(getStableRadius());
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -117,7 +122,8 @@ const ProgressCircle: React.FC<Props> = ({ isUIVisible, timeLeft, startTime, dur
 
       {/* 进度圆环容器 */}
       <div 
-        className={`relative flex items-center justify-center group flex-shrink-0 transition-transform duration-1000 ease-out w-[240px] h-[240px] md:w-[340px] md:h-[340px] ${showUI ? 'cursor-pointer' : 'cursor-none'} ${isInitialPrepare ? 'scale-105' : 'scale-100'}`} 
+        className={`relative flex items-center justify-center group flex-shrink-0 transition-transform duration-1000 ease-out ${showUI ? 'cursor-pointer' : 'cursor-none'} ${isInitialPrepare ? 'scale-105' : 'scale-100'}`} 
+        style={{ width: radius * 2, height: radius * 2 }}
         onClick={handleCircleClick}
       >
         <div className="relative">

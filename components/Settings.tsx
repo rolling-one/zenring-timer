@@ -24,8 +24,13 @@ const Settings: React.FC<Props> = ({ duration, setDuration, soundType, setSoundT
   const [isDragging, setIsDragging] = useState(false);
   // 记录上一次触摸/鼠标的 Y 坐标，用于计算偏移量
   const lastY = useRef(0);
-  // 圆环半径，根据屏幕宽度动态调整
-  const [radius, setRadius] = useState(window.innerWidth < 700 ? 120 : 170);
+  // 圆环半径，根据屏幕短边动态调整，确保旋转屏幕时大小保持一致
+  const getStableRadius = () => {
+    const shortSide = Math.min(window.innerWidth, window.innerHeight);
+    return shortSide < 700 ? 120 : 170;
+  };
+
+  const [radius, setRadius] = useState(getStableRadius);
   // 累积的垂直移动距离，用于控制时间步进
   const accumulatedDelta = useRef(0);
   // 记录是否发生了移动，用于区分“点击”和“拖拽后释放”
@@ -36,7 +41,7 @@ const Settings: React.FC<Props> = ({ duration, setDuration, soundType, setSoundT
   // 响应式调整圆环大小
   useEffect(() => {
     const handleResize = () => {
-      setRadius(window.innerWidth < 700 ? 120 : 170);
+      setRadius(getStableRadius());
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -129,7 +134,8 @@ const Settings: React.FC<Props> = ({ duration, setDuration, soundType, setSoundT
 
       {/* 核心交互圆环区域 */}
       <div 
-        className="relative group cursor-ns-resize flex items-center justify-center touch-none select-none flex-shrink-0 w-[240px] h-[240px] md:w-[340px] md:h-[340px]" 
+        className="relative group cursor-ns-resize flex items-center justify-center touch-none select-none flex-shrink-0" 
+        style={{ width: radius * 2, height: radius * 2 }}
         onPointerDown={handlePointerDown}
         onPointerUp={handleEnd}
       >
