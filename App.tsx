@@ -206,8 +206,10 @@ const App: React.FC = () => {
 
   return (
     <div 
-      className="h-screen w-screen flex flex-col items-center justify-center overflow-hidden select-none stable-color-transition" 
+      className="w-screen flex flex-col items-center justify-center overflow-hidden select-none stable-color-transition" 
       style={{
+        // 始终占满可视区域，避免 iPad 全屏时顶部出现空白
+        height: '100dvh',
         // 冥想时背景为黑，文字为白；闲置时相反
         backgroundColor: isMeditating ? '#000000' : '#FFFFFF',
         color: isMeditating ? '#FFFFFF' : '#000000',
