@@ -27,7 +27,7 @@ const Settings: React.FC<Props> = ({ duration, setDuration, soundType, setSoundT
   // 圆环半径，根据屏幕短边动态调整，确保旋转屏幕时大小保持一致
   const getStableRadius = () => {
     const shortSide = Math.min(window.innerWidth, window.innerHeight);
-    return shortSide < 700 ? 120 : 170;
+    return shortSide < 600 ? 120 : 170;
   };
 
   const [radius, setRadius] = useState(getStableRadius);
