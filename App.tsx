@@ -39,6 +39,14 @@ const App: React.FC = () => {
   // 记录是否通过拖拽圆环开始（用于区分交互方式）
   const [wasDragging, setWasDragging] = useState(false);
   
+  // 圆环半径，根据屏幕短边动态调整，确保旋转屏幕时大小保持一致
+  const getStableRadius = () => {
+    const shortSide = Math.min(window.innerWidth, window.innerHeight);
+    return shortSide < 700 ? 120 : 170;
+  };
+  const [radius, setRadius] = useState(getStableRadius);
+  const isLarge = radius > 150;
+  
   // --- 引用 (Refs) ---
   // 计时器 Interval 的引用
   const timerRef = useRef<number | null>(null);
@@ -52,13 +60,20 @@ const App: React.FC = () => {
   // 获取当前语言的翻译文本
   const t = translations[lang];
 
-  // 监听全屏状态变化
+  // 监听全屏状态变化 & 窗口尺寸变化
   useEffect(() => {
     const handleFsChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
     };
+    const handleResize = () => {
+      setRadius(getStableRadius());
+    };
     document.addEventListener('fullscreenchange', handleFsChange);
-    return () => document.removeEventListener('fullscreenchange', handleFsChange);
+    window.addEventListener('resize', handleResize);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFsChange);
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
 
   // 切换全屏函数
@@ -227,10 +242,14 @@ const App: React.FC = () => {
       }}
     >
       {/* 顶部导航栏 */}
-      <header className="fixed top-6 md:top-10 left-0 w-full px-8 md:px-12 flex justify-between items-center z-[130] pointer-events-none">
+      <header 
+        className="fixed left-0 w-full px-8 md:px-12 flex justify-between items-center z-[130] pointer-events-none"
+        style={{ top: isLarge ? 40 : 24 }}
+      >
         {/* 左侧 Logo / 致谢入口 */}
         <button 
-          className={`text-sm md:text-base font-normal tracking-[0.7em] md:tracking-[1em] uppercase fade-transition ${uiTransitionClass} flex items-center h-10 pointer-events-auto ${showUI ? 'opacity-70' : 'opacity-0'}`}
+          className={`font-normal uppercase fade-transition ${uiTransitionClass} flex items-center h-10 pointer-events-auto ${showUI ? 'opacity-70' : 'opacity-0'}`}
+          style={{ fontSize: isLarge ? 16 : 14, letterSpacing: isLarge ? '1em' : '0.7em' }}
           onPointerEnter={(e) => e.pointerType === 'mouse' && setShowCredits(true)}
           onPointerLeave={(e) => e.pointerType === 'mouse' && setShowCredits(false)}
           onClick={() => {
@@ -242,7 +261,10 @@ const App: React.FC = () => {
         </button>
         
         {/* 右侧控制按钮组 */}
-        <div className={`flex items-center gap-1 md:gap-2 pointer-events-auto fade-transition ${uiTransitionClass} ${showUI ? 'opacity-100' : 'opacity-0'}`}>
+        <div 
+          className={`flex items-center pointer-events-auto fade-transition ${uiTransitionClass} ${showUI ? 'opacity-100' : 'opacity-0'}`}
+          style={{ gap: isLarge ? 8 : 4 }}
+        >
           {/* 帮助按钮 */}
           <button 
             className="w-10 h-10 flex items-center justify-center opacity-40 hover:opacity-100 transition-opacity"
@@ -269,7 +291,8 @@ const App: React.FC = () => {
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.5 }}
-                  className={`absolute inset-0 flex items-center justify-center leading-none uppercase ${lang === 'zh' ? 'text-[17px] md:text-[16px] font-light md:font-normal' : 'text-[14px] md:text-[14px] font-light tracking-tighter'}`}
+                  className={`absolute inset-0 flex items-center justify-center leading-none uppercase ${lang === 'zh' ? 'font-light md:font-normal' : 'font-light tracking-tighter'}`}
+                  style={{ fontSize: lang === 'zh' ? (isLarge ? 16 : 17) : 14 }}
                 >
                   {lang === 'zh' ? '中' : 'EN'}
                 </motion.span>
@@ -308,14 +331,19 @@ const App: React.FC = () => {
                   animate={{ opacity: 0.6 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.5 }}
-                  className={`col-start-1 row-start-1 space-y-6 md:space-y-8 font-normal leading-[2.2] ${lang === 'zh' ? 'text-[14px] md:text-[16px] tracking-[0.3em] uppercase' : 'text-[12px] md:text-[14px] tracking-[0.4em] uppercase'}`}
+                  className={`col-start-1 row-start-1 font-normal leading-[2.2] ${lang === 'zh' ? 'tracking-[0.3em] uppercase' : 'tracking-[0.4em] uppercase'}`}
+                  style={{ fontSize: lang === 'zh' ? (isLarge ? 16 : 14) : (isLarge ? 14 : 12) }}
                 >
                   {/* 渲染操作指南步骤 */}
                   {[t.startInstr, t.adjustInstr, t.endInstr].map((instr, i) => {
                     const parts = instr.split(/[:：]/);
                     const separator = instr.includes('：') ? '：' : ':';
                     return (
-                      <p key={i} className={`flex flex-wrap justify-center md:whitespace-nowrap ${lang === 'en' ? 'gap-x-[0.5em]' : ''}`}>
+                      <p 
+                        key={i} 
+                        className={`flex flex-wrap justify-center md:whitespace-nowrap ${lang === 'en' ? 'gap-x-[0.5em]' : ''}`}
+                        style={{ marginBottom: isLarge ? 32 : 24 }}
+                      >
                         <span className="whitespace-nowrap">{parts[0]}{separator}</span>
                         <span className="whitespace-nowrap">{parts[1]?.trim()}</span>
                       </p>
@@ -338,7 +366,10 @@ const App: React.FC = () => {
           }}
         >
           <div className="max-w-md md:max-w-none w-full px-10 flex flex-col items-center text-center">
-            <div className="opacity-60 font-normal text-[12px] md:text-[14px] tracking-[0.4em] uppercase">
+            <div 
+              className="opacity-60 font-normal tracking-[0.4em] uppercase"
+              style={{ fontSize: isLarge ? 14 : 12 }}
+            >
               Made by Rolling with Gemini
             </div>
           </div>

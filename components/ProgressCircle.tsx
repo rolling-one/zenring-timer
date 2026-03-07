@@ -26,6 +26,9 @@ const ProgressCircle: React.FC<Props> = ({ isUIVisible, timeLeft, startTime, dur
   };
 
   const [radius, setRadius] = useState(getStableRadius);
+  // 是否为大屏幕模式（基于短边），用于固定字体大小
+  const isLarge = radius > 150;
+  
   // 进度百分比 (0 到 1)
   const [progress, setProgress] = useState(0);
   // 是否处于初始准备状态的缩放动画
@@ -189,7 +192,7 @@ const ProgressCircle: React.FC<Props> = ({ isUIVisible, timeLeft, startTime, dur
                   transition={{ duration: 0.5 }}
                   className="flex flex-col items-center justify-center uppercase no-color-transition"
                 >
-                  <div className="relative h-[11px] md:h-[15px] flex items-center justify-center">
+                  <div className="relative flex items-center justify-center" style={{ height: isLarge ? 15 : 11 }}>
                     <AnimatePresence>
                       <motion.span 
                         key={lang}
@@ -197,13 +200,17 @@ const ProgressCircle: React.FC<Props> = ({ isUIVisible, timeLeft, startTime, dur
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.5 }}
-                        className="absolute text-[12px] md:text-[15px] font-normal tracking-[0.5em] pl-[0.5em] whitespace-nowrap no-color-transition"
+                        className="absolute font-normal tracking-[0.5em] pl-[0.5em] whitespace-nowrap no-color-transition"
+                        style={{ fontSize: isLarge ? 15 : 12 }}
                       >
                         {t.getReady}
                       </motion.span>
                     </AnimatePresence>
                   </div>
-                  <span className="text-[24px] md:text-[32px] font-extralight mt-3 leading-none tabular-nums no-color-transition">
+                  <span
+                    className="font-extralight mt-3 leading-none tabular-nums no-color-transition"
+                    style={{ fontSize: isLarge ? 32 : 24 }}
+                  >
                     {timeLeft}
                   </span>
                 </motion.div>
@@ -215,7 +222,8 @@ const ProgressCircle: React.FC<Props> = ({ isUIVisible, timeLeft, startTime, dur
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.5 }}
-                  className="tabular-nums font-thin text-[50px] md:text-[70px] leading-none flex items-baseline no-color-transition"
+                  className="tabular-nums font-thin leading-none flex items-baseline no-color-transition"
+                  style={{ fontSize: isLarge ? 70 : 50 }}
                 >
                   <span className="no-color-transition">{minutes}</span>
                   <span className="mx-[-0.05em] relative -top-[0.05em] no-color-transition">:</span>

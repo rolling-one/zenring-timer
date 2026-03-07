@@ -31,6 +31,8 @@ const Settings: React.FC<Props> = ({ duration, setDuration, soundType, setSoundT
   };
 
   const [radius, setRadius] = useState(getStableRadius);
+  // 是否为大屏幕模式（基于短边），用于固定字体大小
+  const isLarge = radius > 150;
   // 累积的垂直移动距离，用于控制时间步进
   const accumulatedDelta = useRef(0);
   // 记录是否发生了移动，用于区分“点击”和“拖拽后释放”
@@ -155,17 +157,36 @@ const Settings: React.FC<Props> = ({ duration, setDuration, soundType, setSoundT
         </div>
         
         {/* 拖拽提示箭头 */}
-        <ArrowUp className={`absolute -left-12 md:-left-16 transition-all duration-500 ${isHolding ? 'opacity-40 -translate-y-2' : 'opacity-0'}`} size={18} strokeWidth={1} />
-        <ArrowDown className={`absolute -right-12 md:-right-16 transition-all duration-500 ${isHolding ? 'opacity-40 translate-y-2' : 'opacity-0'}`} size={18} strokeWidth={1} />
+        <ArrowUp
+          className={`absolute transition-all duration-500 ${isHolding ? 'opacity-40 -translate-y-2' : 'opacity-0'}`}
+          style={{ left: isLarge ? -64 : -48 }}
+          size={18}
+          strokeWidth={1}
+        />
+        <ArrowDown
+          className={`absolute transition-all duration-500 ${isHolding ? 'opacity-40 translate-y-2' : 'opacity-0'}`}
+          style={{ right: isLarge ? -64 : -48 }}
+          size={18}
+          strokeWidth={1}
+        />
 
         {/* 时间显示区域 */}
-        <div className={`relative z-10 flex flex-col items-center justify-center gap-1 md:gap-2 transition-transform duration-500 ${isDragging ? 'scale-105' : ''}`}>
+        <div
+          className="relative z-10 flex flex-col items-center justify-center transition-transform duration-500"
+          style={{ gap: isLarge ? 8 : 4, transform: isDragging ? 'scale(1.05)' : 'scale(1)' }}
+        >
           {/* 分钟数 */}
-          <span className="text-[72px] md:text-[96px] font-thin tabular-nums leading-none tracking-normal">
+          <span
+            className="font-thin tabular-nums leading-none tracking-normal"
+            style={{ fontSize: isLarge ? 96 : 72 }}
+          >
             {Math.floor(duration / 60)}
           </span>
           {/* 单位标签 */}
-          <div className="relative h-[11px] md:h-[14px] grid grid-cols-1 grid-rows-1 place-items-center">
+          <div
+            className="relative grid grid-cols-1 grid-rows-1 place-items-center"
+            style={{ height: isLarge ? 14 : 11 }}
+          >
             <AnimatePresence>
               <motion.span 
                 key={lang}
@@ -173,7 +194,8 @@ const Settings: React.FC<Props> = ({ duration, setDuration, soundType, setSoundT
                 animate={{ opacity: isHolding ? 0.2 : 0.6 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.5 }}
-                className="col-start-1 row-start-1 text-[12px] md:text-[14px] uppercase tracking-[0.7em] pl-[0.7em] font-normal leading-none"
+                className="col-start-1 row-start-1 uppercase tracking-[0.7em] pl-[0.7em] font-normal leading-none"
+                style={{ fontSize: isLarge ? 14 : 12 }}
               >
                 {t.min}
               </motion.span>
@@ -199,7 +221,10 @@ const Settings: React.FC<Props> = ({ duration, setDuration, soundType, setSoundT
             >
               <s.icon size={24} strokeWidth={1} />
               {/* 音效标签，带固定宽度以防止语言切换时抖动 */}
-              <div className="relative h-[11px] md:h-[12px] w-16 md:w-24 grid grid-cols-1 grid-rows-1 place-items-center">
+              <div
+                className="relative grid grid-cols-1 grid-rows-1 place-items-center"
+                style={{ height: isLarge ? 12 : 11, width: isLarge ? 96 : 64 }}
+              >
                 <AnimatePresence>
                   <motion.span 
                     key={lang + s.id}
@@ -207,7 +232,8 @@ const Settings: React.FC<Props> = ({ duration, setDuration, soundType, setSoundT
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.6 }}
-                    className={`col-start-1 row-start-1 whitespace-nowrap text-[12px] md:text-[12px] uppercase font-normal ${lang === 'en' ? 'tracking-[0.3em] pl-[0.3em]' : 'tracking-[0.5em] pl-[0.5em]'}`}
+                    className={`col-start-1 row-start-1 whitespace-nowrap uppercase font-normal ${lang === 'en' ? 'tracking-[0.3em] pl-[0.3em]' : 'tracking-[0.5em] pl-[0.5em]'}`}
+                    style={{ fontSize: 12 }}
                   >
                     {s.label}
                   </motion.span>
