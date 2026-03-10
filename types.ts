@@ -5,9 +5,10 @@
  * preparing: 准备阶段（10秒倒计时）
  * meditating: 冥想进行中
  * finishing: 冥想结束过渡中
+ * paused: 暂停中
  * ended: 彻底结束
  */
-export type TimerStatus = 'idle' | 'preparing' | 'meditating' | 'finishing' | 'ended';
+export type TimerStatus = 'idle' | 'preparing' | 'meditating' | 'finishing' | 'paused' | 'ended';
 
 /**
  * 音效类型

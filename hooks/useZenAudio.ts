@@ -209,11 +209,16 @@ export const useZenAudio = () => {
 
       audio.currentTime = 0;
       // 设置初始音量为静音，准备淡入
+      gain.gain.cancelScheduledValues(ctx.currentTime);
       gain.gain.setValueAtTime(0, ctx.currentTime);
       
       await safePlay(audio, ambientPlayPromise);
-      // 在 2 秒内线性淡入到正常音量
-      gain.gain.linearRampToValueAtTime(1.0, ctx.currentTime + 2.0);
+      
+      // 重新获取当前时间，确保淡入从音频真正开始播放的那一刻起算
+      const now = ctx.currentTime;
+      gain.gain.setValueAtTime(0, now);
+      // 在 2 秒内平滑淡入到正常音量
+      gain.gain.linearRampToValueAtTime(1.0, now + 2.0);
     }
   }, [ensureContext, clearFadeTimeout]);
 

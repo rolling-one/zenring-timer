@@ -50,6 +50,8 @@ const App: React.FC = () => {
   // --- 引用 (Refs) ---
   // 计时器 Interval 的引用
   const timerRef = useRef<number | null>(null);
+  // 记录暂停前的状态，用于恢复
+  const lastActiveStatus = useRef<TimerStatus | null>(null);
   // UI 自动隐藏的 Timeout 引用
   const uiHideTimeoutRef = useRef<number | null>(null);
   // 记录上一次鼠标位置，用于检测真实移动
@@ -60,7 +62,24 @@ const App: React.FC = () => {
   // 获取当前语言的翻译文本
   const t = translations[lang];
 
-  // 监听全屏状态变化 & 窗口尺寸变化
+  // Wake Lock：防止冥想时屏幕熄灭（需在用户手势后调用才有效）
+  const wakeLockRef = useRef<WakeLockSentinel | null>(null);
+  const requestWakeLock = useCallback(async () => {
+    if (!('wakeLock' in navigator)) return;
+    try {
+      if (wakeLockRef.current) return;
+      wakeLockRef.current = await (navigator as any).wakeLock.request('screen');
+      wakeLockRef.current.addEventListener('release', () => { wakeLockRef.current = null; });
+    } catch (_) {}
+  }, []);
+  const releaseWakeLock = useCallback(() => {
+    if (wakeLockRef.current) {
+      wakeLockRef.current.release().catch(() => {});
+      wakeLockRef.current = null;
+    }
+  }, []);
+
+  // 监听全屏、可见性、窗口尺寸变化
   useEffect(() => {
     const handleFsChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
@@ -68,13 +87,42 @@ const App: React.FC = () => {
     const handleResize = () => {
       setRadius(getStableRadius());
     };
+    // 处理可见性变化：如果用户离开页面，暂停计时和声音
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        // 如果在冥想或准备中退出，则进入暂停状态
+        if (status === 'meditating' || status === 'preparing') {
+          lastActiveStatus.current = status;
+          setStatus('paused');
+          stopAll(); // 立即停止声音
+        }
+        releaseWakeLock();
+      } else {
+        // 重新回到页面时，如果处于暂停状态，则恢复
+        if (status === 'paused' && lastActiveStatus.current) {
+          const prevStatus = lastActiveStatus.current;
+          lastActiveStatus.current = null;
+          setStatus(prevStatus);
+          playAmbient(soundType); // 恢复声音
+        }
+        
+        if (status === 'meditating' || status === 'preparing') {
+          requestWakeLock();
+        }
+      }
+    };
+
     document.addEventListener('fullscreenchange', handleFsChange);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('resize', handleResize);
+    
     return () => {
       document.removeEventListener('fullscreenchange', handleFsChange);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('resize', handleResize);
+      releaseWakeLock();
     };
-  }, []);
+  }, [status, resetTimer, requestWakeLock, releaseWakeLock, stopAll, playAmbient, soundType]);
 
   // 切换全屏函数
   const toggleFullscreen = useCallback(async () => {
@@ -102,6 +150,7 @@ const App: React.FC = () => {
     fadeOutAll(2000); // 2秒内淡出所有声音
     
     setStatus('idle');
+    lastActiveStatus.current = null;
     setStartTime(null);
     setIsUIVisible(true);
     setAccelerateTransition(false);
@@ -159,7 +208,7 @@ const App: React.FC = () => {
 
   // 核心计时器逻辑
   useEffect(() => {
-    if (status === 'idle') return;
+    if (status === 'idle' || status === 'paused') return;
 
     timerRef.current = window.setInterval(() => {
       setTimeLeft(prev => {
